@@ -24,7 +24,7 @@
             android:id="@+id/tvBodyDes"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="2pt"
+            android:paddingLeft="10pt"
             android:text='This repository contains the code for the following paper:  Masanori Suganuma, Mete Ozay, and Takayuki Okatani, "Exploiting the Potential of Standard Convolutional Autoencoders for Image Restoration by Evolutionary Search," International Conference on Machine Learning (ICML), 2018.' />
 
         <LinearLayout
