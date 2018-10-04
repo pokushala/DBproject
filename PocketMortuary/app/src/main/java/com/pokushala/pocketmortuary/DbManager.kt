@@ -2,8 +2,10 @@ package com.pokushala.pocketmortuary
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.database.sqlite.SQLiteQueryBuilder
 import android.widget.Toast
 
 class DbManager{
@@ -45,4 +47,21 @@ class DbManager{
         val id = sqlDB!!.insert(db_table, "", values)
         return id
     }
+
+    fun query(projection:Array<String>, selection:String, selection_args:Array<String>, sort_order:String):Cursor{
+        val qb = SQLiteQueryBuilder()
+        qb.tables = db_table
+        val cursor = qb.query(sqlDB, projection, selection, selection_args,null, null, sort_order)
+        return cursor
+    }
+    fun delete(selection: String, selection_args: Array<String>):Int{
+
+        val count = sqlDB!!.delete(db_table, selection, selection_args)
+        return count
+    }
+    fun update(values: ContentValues, selection:String, selection_args: Array<String>):Int{
+        val count = sqlDB!!.update(db_table, values, selection, selection_args)
+        return count
+    }
+
 }

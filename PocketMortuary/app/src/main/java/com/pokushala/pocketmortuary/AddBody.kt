@@ -9,9 +9,20 @@ import kotlinx.android.synthetic.main.activity_add_body.*
 
 class AddBody : AppCompatActivity() {
     val db_table = "Bodies"
+    var id = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_body)
+
+
+        try{
+            var bundle:Bundle = intent.extras
+            id = bundle.getInt("ID", 0)
+            if (id != 0) {
+                etBodyID.setText(bundle.getString("name"))
+                etDes.setText(bundle.getString("des"))
+            }
+        }catch (ex:Exception){}
     }
 
     fun buAdd(view: View){
@@ -19,13 +30,24 @@ class AddBody : AppCompatActivity() {
         var values = ContentValues()
         values.put("title", etBodyID.text.toString())
         values.put("description", etDes.text.toString())
-        val id = db_manager.insert(values)
-        if (id>0) {
-            Toast.makeText(this, "тело добавлено", Toast.LENGTH_LONG).show()
-            finish()
+        if (id == 0) {
+            val id = db_manager.insert(values)
+            if (id > 0) {
+                Toast.makeText(this, "тело добавлено", Toast.LENGTH_LONG).show()
+                finish()
+            } else {
+                Toast.makeText(this, "неверный индекс", Toast.LENGTH_LONG).show()
+            }
         }
         else{
-            Toast.makeText(this, "неверный индекс", Toast.LENGTH_LONG).show()
+            var selection_args = arrayOf(id.toString())
+            val id = db_manager.update(values, "ID=?", selection_args)
+            if (id > 0) {
+                Toast.makeText(this, "тело изменено", Toast.LENGTH_LONG).show()
+                finish()
+            } else {
+                Toast.makeText(this, "неверный индекс", Toast.LENGTH_LONG).show()
+            }
         }
 
     }

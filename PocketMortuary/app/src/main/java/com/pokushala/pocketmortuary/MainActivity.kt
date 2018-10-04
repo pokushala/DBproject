@@ -23,11 +23,39 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         //add dummy data
-        list_of_bodies.add(Body(1,"pupkin vasua", "umer davno kdh hfdkjh"))
-        list_of_bodies.add(Body(2,"zalupkin vasua", "kjh hk fdtr dtyfjgk"))
-        list_of_bodies.add(Body(3,"lupkin vasua", "ugjhg iiuyi  tyu ttyt uyjh"))
+        //list_of_bodies.add(Body(1,"pupkin vasua", "umer davno kdh hfdkjh"))
+        //list_of_bodies.add(Body(2,"zalupkin vasua", "kjh hk fdtr dtyfjgk"))
+        //list_of_bodies.add(Body(3,"lupkin vasua", "ugjhg iiuyi  tyu ttyt uyjh"))
 
-        var my_body_adapter = BodyAdapter(list_of_bodies)
+
+
+        //load from db
+        load_query("%")
+
+    }
+
+    override fun onResume(){
+        super.onResume()
+        load_query("%")
+
+    }
+
+
+    fun load_query(title:String){
+        var db_manager = DbManager(this)
+        val projections = arrayOf("id", "title", "description")
+        val selection_args = arrayOf(title)
+        val cursor = db_manager.query(projections, "title like ?", selection_args, "title")
+        list_of_bodies.clear()
+        if (cursor.moveToFirst()){
+            do{
+                val id = cursor.getInt(cursor.getColumnIndex("id"))
+                val title = cursor.getString(cursor.getColumnIndex("title"))
+                val description = cursor.getString(cursor.getColumnIndex("description"))
+                list_of_bodies.add(Body(id,title, description))
+            }while(cursor.moveToNext())
+        }
+        var my_body_adapter = BodyAdapter(this, list_of_bodies)
         lvBodies.adapter = my_body_adapter
     }
 
@@ -40,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         sv.setOnQueryTextListener(object: SearchView.OnQueryTextListener{
             override fun onQueryTextSubmit(query: String?): Boolean {
                 Toast.makeText(applicationContext, query, Toast.LENGTH_LONG).show()
-                //TODO search database
+                load_query("%" + query + "%")
                 return false
             }
 
@@ -68,8 +96,10 @@ class MainActivity : AppCompatActivity() {
 
     inner class BodyAdapter:BaseAdapter{
         var list_of_bodies_adapter = ArrayList<Body>()
-        constructor(list_of_bodies_adapter:ArrayList<Body>):super(){
+        var context:Context?=null
+        constructor(context: Context, list_of_bodies_adapter:ArrayList<Body>):super(){
             this.list_of_bodies_adapter = list_of_bodies_adapter
+            this.context = context
         }
 
         override fun getView(p0: Int, p1: View?, p2: ViewGroup?): View {
@@ -77,6 +107,15 @@ class MainActivity : AppCompatActivity() {
             var myBody = list_of_bodies_adapter[p0]
             myView.tvBodyID.text = myBody.body_name
             myView.tvBodyDes.text = myBody.body_des
+            myView.tvDelete.setOnClickListener(View.OnClickListener {
+                val db_manager = DbManager(this.context!!)
+                val selection_args = arrayOf(myBody.body_id.toString())
+                db_manager.delete("ID=?", selection_args)
+                load_query("%")
+            })
+            myView.tvEdit.setOnClickListener(View.OnClickListener {
+                go_to_update(myBody)
+            })
             return myView
         }
 
@@ -92,4 +131,11 @@ class MainActivity : AppCompatActivity() {
             return list_of_bodies_adapter.size
         }
     }
+    fun go_to_update(body: Body){
+        var intent = Intent(this, AddBody::class.java)
+        intent.putExtra("ID", body.body_id)
+        intent.putExtra("name", body.body_name)
+        intent.putExtra("des", body.body_des)
+        startActivity(intent)
+    } //because can't use context inside
 }
