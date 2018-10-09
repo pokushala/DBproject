@@ -23,11 +23,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         //add dummy data
-        //list_of_bodies.add(Body(1,"pupkin vasua", "umer davno kdh hfdkjh"))
+        //list_of_bodies.add(Body(1,"pupkin vasua", "umer davno kdh hfdkjh", "pol"))
         //list_of_bodies.add(Body(2,"zalupkin vasua", "kjh hk fdtr dtyfjgk"))
         //list_of_bodies.add(Body(3,"lupkin vasua", "ugjhg iiuyi  tyu ttyt uyjh"))
-
-
 
         //load from db
         load_query("%")
@@ -37,22 +35,34 @@ class MainActivity : AppCompatActivity() {
     override fun onResume(){
         super.onResume()
         load_query("%")
-
     }
-
-
-    fun load_query(title:String){
+/*
+    fun chose_male():String{
+        val radioGroup = findViewById<RadioGroup>(R.id.etGenderOpt)
+        var text = "You selected: "
+        radioGroup?.setOnCheckedChangeListener {group, checkedId ->
+            text += if (R.id.etGenderOpt == checkedId) "male" else "female"
+            Toast.makeText(applicationContext, text, Toast.LENGTH_SHORT).show()
+        }
+        return text
+    }
+*/
+    fun load_query(surname:String){
         var db_manager = DbManager(this)
-        val projections = arrayOf("id", "title", "description")
-        val selection_args = arrayOf(title)
-        val cursor = db_manager.query(projections, "title like ?", selection_args, "title")
+        val projections = arrayOf("id_body", "surname", "name", "sex", "date_arrived", "date_birth", "date_death")
+        val selection_args = arrayOf(surname)
+        val cursor = db_manager.query(projections, "surname like ?", selection_args, "surname")
         list_of_bodies.clear()
         if (cursor.moveToFirst()){
             do{
-                val id = cursor.getInt(cursor.getColumnIndex("id"))
-                val title = cursor.getString(cursor.getColumnIndex("title"))
-                val description = cursor.getString(cursor.getColumnIndex("description"))
-                list_of_bodies.add(Body(id,title, description))
+                val id = cursor.getInt(cursor.getColumnIndex("id_body"))
+                val surname = cursor.getString(cursor.getColumnIndex("surname"))
+                val name = cursor.getString(cursor.getColumnIndex("name"))
+                val sex = cursor.getString(cursor.getColumnIndex("sex"))
+                val date_arrived = cursor.getString(cursor.getColumnIndex("date_arrived"))
+                val date_birth = cursor.getString(cursor.getColumnIndex("date_birth"))
+                val date_death = cursor.getString(cursor.getColumnIndex("date_death"))
+                list_of_bodies.add(Body(id, surname, name, sex, date_arrived, date_birth, date_death))
             }while(cursor.moveToNext())
         }
         var my_body_adapter = BodyAdapter(this, list_of_bodies)
@@ -105,12 +115,15 @@ class MainActivity : AppCompatActivity() {
         override fun getView(p0: Int, p1: View?, p2: ViewGroup?): View {
             var myView = layoutInflater.inflate(R.layout.ticket, null)
             var myBody = list_of_bodies_adapter[p0]
-            myView.tvBodyID.text = myBody.body_name
-            myView.tvBodyDes.text = myBody.body_des
+            myView.tvBodyID.text = myBody.body_surname + " " +
+                    myBody.body_name + " " +
+                    myBody.body_sex
+            myView.tvBodyDes.text = myBody.body_birth + "-" + myBody.body_death +
+                    "\n Поступление: " + myBody.body_arrived
             myView.tvDelete.setOnClickListener(View.OnClickListener {
                 val db_manager = DbManager(this.context!!)
                 val selection_args = arrayOf(myBody.body_id.toString())
-                db_manager.delete("ID=?", selection_args)
+                db_manager.delete("id_body=?", selection_args)
                 load_query("%")
             })
             myView.tvEdit.setOnClickListener(View.OnClickListener {
@@ -131,11 +144,18 @@ class MainActivity : AppCompatActivity() {
             return list_of_bodies_adapter.size
         }
     }
+
+    // после нажатия на редактирования заполненные ранее поля в активити для изменения
     fun go_to_update(body: Body){
         var intent = Intent(this, AddBody::class.java)
-        intent.putExtra("ID", body.body_id)
+        //change
+        intent.putExtra("id_body", body.body_id)
+        intent.putExtra("surname", body.body_surname)
         intent.putExtra("name", body.body_name)
-        intent.putExtra("des", body.body_des)
+        intent.putExtra("sex", body.body_sex)
+        intent.putExtra("date_birth", body.body_birth)
+        intent.putExtra("date_death", body.body_death)
+        intent.putExtra("date_arrived", body.body_arrived)
         startActivity(intent)
     } //because can't use context inside
 }
